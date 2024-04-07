@@ -55,6 +55,7 @@ class CMDBHandler(object):
     CACHE_GLOBAL_VAR_TEMPLATE = "gsekit:cmdb:biz:{bk_biz_id}:global_variables"
     CACHE_TOPO_ATTR_TEMPLATE = "gsekit:cmdb:biz:{bk_biz_id}:topo_tree_attributes"
     CACHE_CLOUD_TEMPLATE = "gsekit:cmdb:biz:{bk_biz_id}:clouds"
+    CACHE_BIZ_ID_NAME = "gsekit:biz_id:name"
     BK_BIZ_OBJ_ID = "biz"
     BK_SET_OBJ_ID = "set"
     BK_MODULE_OBJ_ID = "module"
@@ -106,6 +107,21 @@ class CMDBHandler(object):
             biz["permission"] = {ActionEnum.VIEW_BUSINESS.id: biz["bk_biz_id"] in allowed_biz_id_list}
 
         return all_biz_list
+
+    @classmethod
+    def biz_id_name_without_permission(cls) -> Dict[int, str]:
+        cache_biz_id_name: Dict[int, str] = cache.get(cls.CACHE_BIZ_ID_NAME)
+        if cache_biz_id_name:
+            return cache_biz_id_name
+
+        all_biz_list = CCApi.search_business({"fields": ["bk_biz_id", "bk_biz_name"]}, use_admin=True).get("info") or []
+        result = {biz["bk_biz_id"]: biz["bk_biz_name"] for biz in all_biz_list}
+        cache.set(
+            cls.CACHE_BIZ_ID_NAME,
+            result,
+            gsekit_const.CacheExpire.FREQUENT_UPDATE,
+        )
+        return result
 
     @staticmethod
     def map_cc3_field_to_cc1(new_field_name: str) -> str:

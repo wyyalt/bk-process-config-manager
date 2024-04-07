@@ -25,11 +25,12 @@ from apps.api import CCApi
 from apps.gsekit import constants
 from apps.gsekit.cmdb.handlers.cmdb import CMDBHandler
 from apps.gsekit.configfile.models import ConfigTemplateBindingRelationship, ConfigTemplate
+from apps.gsekit.meta.models import GlobalSettings
 from apps.gsekit.pipeline_plugins.components.collections.gse import NAMESPACE, GseAutoType, GseDataErrorCode, GseOpType
 from apps.gsekit.process import exceptions
 from apps.gsekit.process.exceptions import (
     ProcessDoseNotExistException,
-    DuplicateProcessInstException,
+    # DuplicateProcessInstException,
     ProcessNotMatchException,
 )
 from apps.gsekit.process.models import Process, ProcessInst
@@ -768,8 +769,17 @@ class ProcessHandler(APIModel):
             uniq_key_set.add(inst.local_inst_id_uniq_key)
 
         # 存在重复进程实例
+        # 排除重复进程实例不入库，记录日志
         if duplicate_proc_instances:
-            raise DuplicateProcessInstException(uniq_key=duplicate_proc_instances)
+            to_be_created_inst = [
+                inst for inst in to_be_created_inst if inst.local_inst_id_uniq_key not in duplicate_proc_instances
+            ]
+            # 记录日志便于回溯问题
+            logger.error(
+                f"sync_biz_process: {self.bk_biz_id} "
+                f"create_process_inst: duplicate_proc_instances uniq_key->{duplicate_proc_instances}"
+            )
+            # raise DuplicateProcessInstException(uniq_key=duplicate_proc_instances)
 
         with transaction.atomic():
             if to_be_deleted_inst_condition:
@@ -1022,7 +1032,13 @@ class ProcessHandler(APIModel):
 
         proc_inst_status_infos = []
         uniq_keys_recorded = set()
-        poll_time, interval, timeout = 0, 1.5, 60
+        # 全局配置超时时间
+        timeout: int = GlobalSettings.get_config(GlobalSettings.KEYS.SYNC_BIZ_PROCESS_STATUS_TIMEOUT, 30)
+        poll_time, interval, = (
+            0,
+            1.5,
+        )
+        start_time: int = int(time.time())
         while True:
             try:
                 gse_api_result = gse_api_helper.get_proc_operate_result(gse_task_id)["data"]
@@ -1064,7 +1080,8 @@ class ProcessHandler(APIModel):
                 elif task_result.get("error_code") != GseDataErrorCode.RUNNING:
                     uniq_keys_recorded.add(meta_key_uniq_key_map[meta_key])
 
-            if any([len(uniq_keys_recorded) == len(gse_api_result.keys()), poll_time > timeout]):
+            end_time: int = int(time.time())
+            if any([len(uniq_keys_recorded) == len(gse_api_result.keys()), end_time - start_time > timeout]):
                 break
             time.sleep(interval)
             poll_time += interval

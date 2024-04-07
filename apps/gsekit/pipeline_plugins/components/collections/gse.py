@@ -85,9 +85,9 @@ class GseDataErrorCode(object):
     def need_ignore_err_code(cls, op_type: int, error_code: int) -> bool:
         # 对运行中的进程执行【启动】命令，结果是执行失败（不能忽略），业务需要全stop后再重新start
         # （主要考量的点在于进程、配置会有更新遗漏导致最终没有生效的风险）
-        # if op_type == GseOpType.START and error_code == cls.PROC_RUNNING:
-        #     # 启动进程，但进程本身已运行中
-        #     return True
+        if op_type == GseOpType.START and error_code == cls.PROC_RUNNING:
+            # 启动进程，但进程本身已运行中
+            return True
 
         # 对于已停止的进程执行【停止】命令，结果是执行成功，已停止的进程实例可以标记成忽略
         if op_type == GseOpType.STOP and error_code == cls.PROC_NO_RUNNING:
@@ -452,7 +452,8 @@ class BulkGseCheckProcessService(BulkGseOperateProcessService):
             task_result = self.get_job_task_gse_result(gse_api_result, job_task, common_data)
             error_code = task_result.get("error_code")
 
-            if error_code == GseDataErrorCode.SUCCESS:
+            # TODO GSE当前版本并未区分828的单独处理逻辑，所以如果遇到828错误认为成功
+            if error_code in [GseDataErrorCode.SUCCESS]:
                 gse_ip_proc_info = json.loads(task_result["content"])
                 try:
                     pid = gse_ip_proc_info["process"][0]["instance"][0]["pid"]

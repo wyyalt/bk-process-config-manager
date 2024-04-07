@@ -34,6 +34,9 @@ class GlobalSettings(models.Model):
         PROCESS_TASK_GRANULARITY = "PROCESS_TASK_GRANULARITY"  # 进程任务聚合粒度
         # GSE 2.0 灰度列表
         GSE2_GRAY_SCOPE_LIST = "GSE2_GRAY_SCOPE_LIST"
+        SYNC_BIZ_PROCESS_STATUS_TIMEOUT = "SYNC_BIZ_PROCESS_STATUS_TIMEOUT"
+        # 记录所有业务ID,用于同步新业务到灰度列表对比使用
+        ALL_BIZ_IDS = "ALL_BIZ_IDS"
 
     @classmethod
     def process_task_aggregate_info(cls, bk_biz_id: int) -> typing.Dict[str, str]:

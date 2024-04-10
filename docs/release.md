@@ -1,5 +1,21 @@
 # Release
 
+## 1.0.29 - 2024-04-10 
+
+### 🐛 Bugfixes
+
+- fix: 优化同步进程状态，增加新业务自动中入2.0，适配828错误 (closed #314)
+
+
+## 📦 Dependencies
+
+- chore: GIT commit message 提交规范 (closed #311)
+
+
+
+**Full Changelog**: https://github.com/TencentBlueKing/bk-process-config-manager/compare/v1.0.28...v1.0.29
+
+
 ## 1.0.28 - 2024-01-15 
 
 ### 🚀 Features

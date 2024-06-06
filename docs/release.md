@@ -1,5 +1,11 @@
 # Release
 
+## 1.0.30 - 2024-06-06 
+
+
+**Full Changelog**: https://github.com/TencentBlueKing/bk-process-config-manager/compare/v1.0.29...v1.0.30
+
+
 ## 1.0.29 - 2024-04-10 
 
 ### 🐛 Bugfixes

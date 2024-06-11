@@ -240,3 +240,8 @@ class ProcessViews(APIViewSet):
                 expression=self.validated_data.get("expression"),
             )
         )
+
+    @swagger_auto_schema(operation_summary="获取业务进程同步时间", tags=ProcessViewTags)
+    @action(detail=False, methods=["GET"])
+    def sync_process_status_time(self, request, bk_biz_id, *args, **kwargs):
+        return Response(ProcessHandler(bk_biz_id=bk_biz_id).sync_process_status_time())

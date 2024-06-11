@@ -37,6 +37,7 @@ class GlobalSettings(models.Model):
         SYNC_BIZ_PROCESS_STATUS_TIMEOUT = "SYNC_BIZ_PROCESS_STATUS_TIMEOUT"
         # 记录所有业务ID,用于同步新业务到灰度列表对比使用
         ALL_BIZ_IDS = "ALL_BIZ_IDS"
+        SYNC_PROC_STATUS_TIME = "SYNC_PROC_STATUS_TIME"
 
     @classmethod
     def process_task_aggregate_info(cls, bk_biz_id: int) -> typing.Dict[str, str]:

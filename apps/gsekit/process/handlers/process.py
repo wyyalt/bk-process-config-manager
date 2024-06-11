@@ -9,6 +9,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 See the License for the specific language governing permissions and limitations under the License.
 """
 import copy
+from datetime import datetime
 import json
 import operator
 import time
@@ -511,6 +512,8 @@ class ProcessHandler(APIModel):
         )
 
         self.create_process_inst(process_list)
+
+        return process_list
 
     def generate_process_inst_migrate_data(self, process_list: List) -> Dict:
         """计算准备好变更实例所需的数据"""
@@ -1109,11 +1112,11 @@ class ProcessHandler(APIModel):
             )
         return proc_inst_status_infos
 
-    def sync_biz_process_status(self):
+    def sync_biz_process_status(self, process_related_infos=None):
 
         begin_time = time.time()
-
-        process_related_infos = batch_request(CCApi.list_process_related_info, {"bk_biz_id": self.bk_biz_id})
+        if not process_related_infos:
+            process_related_infos = batch_request(CCApi.list_process_related_info, {"bk_biz_id": self.bk_biz_id})
         bk_process_ids = [process_info["process"]["bk_process_id"] for process_info in process_related_infos]
         proc_inst_map = defaultdict(list)
         for proc_inst in ProcessInst.objects.filter(bk_process_id__in=bk_process_ids).values(
@@ -1164,6 +1167,14 @@ class ProcessHandler(APIModel):
 
         cost_time = time.time() - begin_time
         logger.info("[sync_proc_status] cost: {cost_time}s".format(cost_time=cost_time))
+        # 记录同步时间
+        with transaction.atomic():
+            sync_proc_status_time, _ = GlobalSettings.objects.select_for_update().get_or_create(
+                key=GlobalSettings.KEYS.SYNC_PROC_STATUS_TIME, defaults={"v_json": {}}
+            )
+            sync_proc_status_time.v_json[str(self.bk_biz_id)] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            sync_proc_status_time.save()
+
         return {"cost_time": cost_time}
 
     def process_instance_simple(
@@ -1207,3 +1218,9 @@ class ProcessHandler(APIModel):
             # 若有疑问请联系 CMDB 排查
             raise ProcessNotMatchException(user_bk_process_id=bk_process_id, cc_bk_process_id=cc_process_id)
         return process_list[0]
+
+    def sync_process_status_time(self):
+        sync_process_status_time: Dict[str:str] = GlobalSettings.get_config(
+            key=GlobalSettings.KEYS.SYNC_PROC_STATUS_TIME, default={}
+        )
+        return {"time": sync_process_status_time.get(str(self.bk_biz_id), "")}

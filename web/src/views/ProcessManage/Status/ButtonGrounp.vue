@@ -71,10 +71,8 @@
       </ul>
     </bk-popover>
     <div class="synchronous-btn">
-      <p class="syncProcessStateTime">
-        <i18n path="状态同步">
-          <span style="color: #FF9C01;">{{ time }}</span>
-        </i18n>
+      <p class="syncProcessStateTime" style="color: #FF9C01;">
+        {{ $t('状态同步', [time] ) }}
       </p>
       <bk-button
         v-test="'syncStatus'"

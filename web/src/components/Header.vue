@@ -2,8 +2,8 @@
   <header class="header">
     <div class="header-left">
       <div class="logo-container" @click="jumpToHome">
-        <img class="logo-image" src="../assets/images/favicon.png" alt="Logo">
-        <span class="title">{{ appName }}</span>
+        <img class="logo-image" :src="appLogo" alt="Logo">
+        <span class="title">{{ name }}</span>
       </div>
     </div>
     <div class="header-nav" v-test.common="'headNav'">
@@ -73,6 +73,12 @@ export default {
     showStaticRouter() {
       return this.$store.state.showStaticRouter;
     },
+    name() {
+      return this.$store.state.platform.i18n.name || this.appName
+    },
+    appLogo() {
+      return this.$store.state.platform.appLogo
+    }
   },
   watch: {
     bizId(val) {
@@ -183,6 +189,7 @@ export default {
         .logo-image {
           padding: 0 8px;
           height: 28px;
+          background: v-bind(appLogo) no-repeat 0 center;
         }
 
         .title {

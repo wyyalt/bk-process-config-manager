@@ -42,7 +42,8 @@ export default {
   },
   actions: {
     async getConfig(context) {
-      const config = await getPlatformConfig(window.PROJECT_CONFIG?.BKPAAS_SHARED_RES_URL, {
+      const url = `${window.PROJECT_CONFIG?.BKPAAS_SHARED_RES_URL}/gsekit/base.js`
+      const config = await getPlatformConfig(url, {
         name: 'GSEKit',
         nameEn: 'GSEKit',
         appLogo: logoSrc,

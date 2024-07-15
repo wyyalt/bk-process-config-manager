@@ -58,4 +58,5 @@ def mysetting(request):
         "CMDB_URL": settings.BK_CC_HOST,
         "TAM_AEGIS_KEY": settings.TAM_AEGIS_KEY,
         "TAM_AEGIS_URL": settings.TAM_AEGIS_URL,
+        "BKPAAS_SHARED_RES_URL": settings.BKPAAS_SHARED_RES_URL,
     }

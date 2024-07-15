@@ -251,6 +251,9 @@ BK_IAM_SAAS_HOST = env.BK_IAM_SAAS_HOST
 TAM_AEGIS_KEY = os.getenv("BKAPP_TAM_AEGIS_KEY")
 TAM_AEGIS_URL = os.getenv("BKAPP_TAM_AEGIS_URL")
 
+# 平台公共信息
+BKPAAS_SHARED_RES_URL = os.getenv("BKPAAS_SHARED_RES_URL", "")
+
 # ==============================================================================
 # Cache
 # ==============================================================================

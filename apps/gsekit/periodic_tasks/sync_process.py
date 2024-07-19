@@ -55,9 +55,9 @@ def sync_new_biz_to_gray_scope_list():
     logger.info(f"sync_new_biz_to_gray_scope_list: {task_id} Start adding new biz to GSE2_GRAY_SCOPE_LIST.")
 
     all_biz_ids = GlobalSettings.get_config(key=GlobalSettings.KEYS.ALL_BIZ_IDS, default=[])
-    if not all_biz_ids:
-        logger.info(f"sync_new_biz_to_gray_scope_list: {task_id} No need to add new biz to GSE2_GRAY_SCOPE_LIST.")
-        return None
+    # if not all_biz_ids:
+    #     logger.info(f"sync_new_biz_to_gray_scope_list: {task_id} No need to add new biz to GSE2_GRAY_SCOPE_LIST.")
+    #     return None
 
     cc_all_biz_ids: List[int] = list(CMDBHandler.biz_id_name_without_permission().keys())
     new_biz_ids: List[int] = list(set(cc_all_biz_ids) - set(all_biz_ids))
@@ -66,7 +66,10 @@ def sync_new_biz_to_gray_scope_list():
     if new_biz_ids:
         with transaction.atomic():
             # 更新全部业务列表
-            GlobalSettings.update_config(key=GlobalSettings.KEYS.ALL_BIZ_IDS, value=cc_all_biz_ids)
+            if GlobalSettings.objects.filter(key=GlobalSettings.KEYS.ALL_BIZ_IDS):
+                GlobalSettings.update_config(key=GlobalSettings.KEYS.ALL_BIZ_IDS, value=cc_all_biz_ids)
+            else:
+                GlobalSettings.set_config(key=GlobalSettings.KEYS.ALL_BIZ_IDS, value=cc_all_biz_ids)
 
             # 对新业务执行灰度操作
             result = GrayHandler.build({"bk_biz_ids": new_biz_ids})

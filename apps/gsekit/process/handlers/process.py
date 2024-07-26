@@ -16,7 +16,7 @@ import time
 from collections import defaultdict
 from functools import reduce
 from itertools import groupby
-from typing import List, Dict, Union
+from typing import Any, List, Dict, Union
 
 from django.db import transaction
 from django.db.models import Q, QuerySet
@@ -44,6 +44,7 @@ from apps.utils.mako_utils.render import mako_render
 from common.log import logger
 from apps.adapters.api.gse import get_gse_api_helper
 from apps.core.gray.tools import GrayTools
+from env.constants import GseVersion
 
 
 class ProcessHandler(APIModel):
@@ -950,8 +951,8 @@ class ProcessHandler(APIModel):
     def get_proc_inst_status_infos(
         proc_inst_infos, _request=None, gse_api_helper: GseApiBaseHelper = None
     ) -> List[Dict]:
-        proc_operate_req_slice = []
         meta_key_uniq_key_map = {}
+        proc_operate_req: Dict[str, Dict[str, Any]] = {}
         for proc_inst_info in proc_inst_infos:
             host_info = proc_inst_info["host_info"]
             process_info = proc_inst_info["process_info"]
@@ -986,26 +987,34 @@ class ProcessHandler(APIModel):
             meta_key: str = gse_api_helper.get_gse_proc_key(
                 host_info, namespace=namespace, proc_name=f"{process_info['bk_process_name']}_{local_inst_id}"
             )
+            bk_agent_id: str = host_info.get("bk_agent_id", "")
+            if gse_api_helper.version == GseVersion.V2.value and not bk_agent_id:
+                # 对于V2来说必须使用agentid进行查询
+                logger.info(
+                    f"get_proc_inst_status failed-> namespace: {namespace}, meta_key:{meta_key}, uniq_key: {uniq_key}"
+                )
+                continue
 
             meta_key_uniq_key_map[meta_key] = uniq_key
-            proc_operate_req_slice.append(
-                {
+
+            local_inst_name: str = f"{process_info['bk_process_name']}_{local_inst_id}"
+
+            host_identity: Dict[str, Any] = {
+                "bk_host_innerip": host_info["bk_host_innerip"],
+                "bk_cloud_id": host_info["bk_cloud_id"],
+                "bk_agent_id": host_info.get("bk_agent_id", ""),
+            }
+
+            if local_inst_name in proc_operate_req:
+                proc_operate_req[local_inst_name]["hosts"].append(host_identity)
+            else:
+                proc_operate_req[local_inst_name] = {
                     "meta": {
                         "namespace": namespace,
-                        "name": f"{process_info['bk_process_name']}_{local_inst_id}",
-                        "labels": {
-                            "bk_process_name": process_info["bk_process_name"],
-                            "bk_process_id": process_info["bk_process_id"],
-                        },
+                        "name": local_inst_name,
                     },
                     "op_type": GseOpType.CHECK,
-                    "hosts": [
-                        {
-                            "bk_host_innerip": host_info["bk_host_innerip"],
-                            "bk_cloud_id": host_info["bk_cloud_id"],
-                            "bk_agent_id": host_info.get("bk_agent_id", ""),
-                        }
-                    ],
+                    "hosts": [host_identity],
                     "spec": {
                         "identity": {
                             "index_key": "",
@@ -1029,9 +1038,9 @@ class ProcessHandler(APIModel):
                         },
                     },
                 }
-            )
-
-        gse_task_id: str = gse_api_helper.operate_proc_multi(proc_operate_req=proc_operate_req_slice)
+        if not proc_operate_req.values():
+            raise exceptions.ProcessNoAgentIDException()
+        gse_task_id: str = gse_api_helper.operate_proc_multi(proc_operate_req=list(proc_operate_req.values()))
 
         proc_inst_status_infos = []
         uniq_keys_recorded = set()

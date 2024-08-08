@@ -41,7 +41,7 @@ def sync_process(bk_biz_id=None):
     count = len(bk_biz_id_list)
     for index, biz_id in enumerate(bk_biz_id_list):
         logger.info(f"[sync_process] start, bk_biz_id={biz_id}")
-        countdown = calculate_countdown(count, index)
+        countdown = calculate_countdown(count, index) if count > 1 else 0
         sync_biz_process_task.apply_async((biz_id,), countdown=countdown)
         logger.info(f"[sync_process] bk_biz_id={biz_id} will be run after {countdown} seconds.")
 

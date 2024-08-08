@@ -209,6 +209,7 @@ BK_COMPONENT_API_OVERWRITE_URL = env.BK_COMPONENT_API_URL
 
 BK_CC_HOST = os.environ.get("BK_CC_HOST", BK_PAAS_HOST.replace("paas", "cmdb"))
 BK_SAAS_HOST = env.BK_SAAS_HOST
+BK_DOMAIN = os.environ.get("BKPAAS_BK_DOMAIN", "")
 
 BK_ADMIN_USERNAME = os.getenv("BKAPP_ADMIN_USERNAME", "admin")
 

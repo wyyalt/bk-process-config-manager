@@ -39,7 +39,7 @@
     "dependencies": {
         "@blueking/bkcharts": "^2.0.10",
         "@blueking/login-modal": "^1.0.5",
-        "@blueking/platform-config": "^1.0.2",
+        "@blueking/platform-config": "^1.0.5",
         "@icon-cool/bk-icon-gsekit": "0.0.9",
         "@vue/composition-api": "^1.7.2",
         "axios": "0.21.4",

@@ -26,11 +26,19 @@
         v-model="bizId"
         @selected="handleSelect">
       </AuthSelect>
-      <bk-popover v-if="username"
-                  trigger="click"
-                  theme="profile-popover light"
-                  :on-show="() => isPopoverActive = true"
-                  :on-hide="() => isPopoverActive = false">
+      <bk-dropdown-menu trigger="click" @show="dropdownShow" @hide="dropdownHide" ref="dropdown">
+        <div :class="['header-nav-btn', 'header-nav-icon-btn', { 'dropdown-active': isShow }]" slot="dropdown-trigger">
+          <i :class="`gsekit-icon gsekit-icon-lang-${language}`"></i>
+        </div>
+        <ul class="bk-dropdown-list" slot="dropdown-content">
+          <li class="dropdown-list-item" :class="{ 'active': item.id === language }" v-for="item in langList" :key="item.id"
+            @click="toggleLang(item)">
+            <span :class="`gsekit-icon gsekit-icon-lang-${item.id}`"></span>{{ item.name }}
+          </li>
+        </ul>
+      </bk-dropdown-menu>
+      <bk-popover v-if="username" trigger="click" theme="profile-popover light" :on-show="() => isPopoverActive = true"
+        :on-hide="() => isPopoverActive = false">
         <div class="login-username" :class="isPopoverActive && 'active'">
           {{ username }}<span class="bk-icon icon-down-shape"></span>
         </div>
@@ -66,11 +74,22 @@ export default {
     return {
       isPopoverActive: false,
       bizId: '',
+      isShow: false,
       bizList: [],
+      langList: [
+        {
+          id: 'zh-cn', // zhCN
+          name: '中文',
+        },
+        {
+          id: 'en', // enUS
+          name: 'English',
+        },
+      ]
     };
   },
   computed: {
-    ...mapState(['username', 'appName', 'language']),
+    ...mapState(['username', 'appName']),
     showStaticRouter() {
       return this.$store.state.showStaticRouter;
     },
@@ -79,6 +98,9 @@ export default {
     },
     appLogo() {
       return this.$store.state.platform.appLogo || logoSrc;
+    },
+    language() {
+      return window.language;
     }
   },
   watch: {
@@ -134,6 +156,37 @@ export default {
         this.$store.commit('setMainContentLoading', false);
       }
     },
+    dropdownShow() {
+      this.isShow = true;
+    },
+    dropdownHide() {
+      this.isShow = false;
+    },
+    toggleLang(item) {
+      if (item.id !== this.language) {
+        const {
+          BK_COMPONENT_API_URL: overwriteUrl = '',
+          BK_DOMAIN: domain = '',
+        } = window.PROJECT_CONFIG;
+
+        const api = `${overwriteUrl}/api/c/compapi/v2/usermanage/fe_update_user_language/?language=${item.id}`;
+        const scriptId = 'jsonp-script';
+        const prevJsonpScript = document.getElementById(scriptId);
+        if (prevJsonpScript) {
+          document.body.removeChild(prevJsonpScript);
+        }
+        const scriptEl = document.createElement('script');
+        scriptEl.type = 'text/javascript';
+        scriptEl.src = api;
+        scriptEl.id = scriptId;
+        document.body.appendChild(scriptEl);
+
+        const today = new Date();
+        today.setTime(today.getTime() + 1000 * 60 * 60 * 24);
+        document.cookie = `blueking_language=${item.id};path=/;domain=${domain};expires=${today.toUTCString()}`;
+        location.reload();
+      }
+    },
     handleSelect(bizId) {
       this.$router.push({
         query: {
@@ -168,130 +221,190 @@ export default {
 </script>
 
 <style scoped lang="postcss">
-  .header {
+.header {
+  display: flex;
+  align-items: center;
+  line-height: 52px;
+  color: #96a2b9;
+  background: #182132;
+  font-size: 14px;
+
+  .header-left {
+    flex-shrink: 0;
     display: flex;
-    align-items: center;
-    line-height: 52px;
-    color: #96a2b9;
-    background: #182132;
-    font-size: 14px;
+    width: 260px;
 
-    .header-left {
-      flex-shrink: 0;
-      display: flex;
-      width: 260px;
-
-      .logo-container {
-        display: flex;
-        align-items: center;
-        margin-left: 8px;
-        transition: color .3s;
-
-        .logo-image {
-          padding: 0 8px;
-          height: 28px;
-          background: v-bind(appLogo) no-repeat 0 center;
-        }
-
-        .title {
-          padding: 0 8px;
-          font-size: 18px;
-          font-weight: 700;
-        }
-
-        &:hover {
-          color: #fff;
-          transition: color .3s;
-          cursor: pointer;
-        }
-      }
-    }
-
-    .header-nav {
-      width: 100%;
-      padding-left: 25px;
-
-      .nav-item {
-        margin-right: 40px;
-        color: #96a2b9;
-        transition: color .3s;
-
-        &:hover,
-        &.router-link-active {
-          color: #fff;
-          transition: color .3s;
-        }
-      }
-    }
-
-    .header-right {
-      flex-shrink: 0;
+    .logo-container {
       display: flex;
       align-items: center;
+      margin-left: 8px;
+      transition: color .3s;
 
-      .king-select {
-        width: 240px;
-        margin-right: 40px;
-        background: #252f43;
-        border-color: #252f43;
-
-        /deep/ .bk-select-name {
-          color: #d3d9e4;
-        }
+      .logo-image {
+        padding: 0 8px;
+        height: 28px;
+        background: v-bind(appLogo) no-repeat 0 center;
       }
 
-      .login-username {
-        display: flex;
-        align-items: center;
-        line-height: 40px;
-        margin-right: 40px;
+      .title {
+        padding: 0 8px;
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      &:hover {
+        color: #fff;
+        transition: color .3s;
         cursor: pointer;
+      }
+    }
+  }
+
+  .header-nav {
+    width: 100%;
+    padding-left: 25px;
+
+    .nav-item {
+      margin-right: 40px;
+      color: #96a2b9;
+      transition: color .3s;
+
+      &:hover,
+      &.router-link-active {
+        color: #fff;
+        transition: color .3s;
+      }
+    }
+  }
+
+  .header-right {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+
+    .king-select {
+      width: 240px;
+      margin-right: 40px;
+      background: #252f43;
+      border-color: #252f43;
+
+      /deep/ .bk-select-name {
+        color: #d3d9e4;
+      }
+    }
+
+    .login-username {
+      display: flex;
+      align-items: center;
+      line-height: 40px;
+      margin-right: 40px;
+      cursor: pointer;
+      transition: color .2s;
+      user-select: none;
+
+      .icon-down-shape {
+        margin-left: 6px;
+        transition: transform .2s;
+      }
+
+      &:hover {
+        color: #fff;
         transition: color .2s;
-        user-select: none;
+      }
+
+      &.active {
+        color: #fff;
+        transition: color .2s;
 
         .icon-down-shape {
-          margin-left: 6px;
+          transform: rotate(-180deg);
           transition: transform .2s;
-        }
-
-        &:hover {
-          color: #fff;
-          transition: color .2s;
-        }
-
-        &.active {
-          color: #fff;
-          transition: color .2s;
-
-          .icon-down-shape {
-            transform: rotate(-180deg);
-            transition: transform .2s;
-          }
         }
       }
     }
   }
+  .bk-dropdown-menu {
+    .bk-dropdown-content {
+      margin: 14px 0 !important;
+    }
+  
+    .header-nav-btn {
+      margin-right: 20px;
+      display: flex;
+      flex-flow: row nowrap;
+      align-items: center;
+      justify-content: center;
+      min-width: 32px;
+      min-height: 32px;
+      margin-left: 12px;
+      padding: 0 7px;
+      width: 32px;
+      font-size: 18px;
+  
+      &.dropdown-active {
+        background: rgba(255, 255, 255, .1);
+        border-radius: 16px;
+        color: #fff;
+      }
+    }
+  
+    .bk-dropdown-list {
+  
+      min-width: 100px;
+      padding: 4px 0;
+      margin: 0;
+      z-index: 2500;
+      border-radius: 2px;
+      background: #fff;
+  
+      li {
+        display: block !important;
+        height: 32px;
+        line-height: 32px;
+        padding: 0 8px;
+        color: #63656e;
+        text-decoration: none;
+        white-space: nowrap;
+        cursor: pointer;
+        font-size: 12px;
+  
+        &:hover {
+          background: #f5f7fa;
+        }
+        &.active {
+          background-color: #eaf3ff;
+          color: #3a84ff
+        }
+  
+        .gsekit-icon {
+          margin-right: 8px;
+          font-size: 18px;
+        }
+      }
+    }
+  }
+}
 </style>
 
 <style lang="postcss">
-  .tippy-tooltip.profile-popover-theme[data-size=small] {
-    padding: 0;
+.tippy-tooltip.profile-popover-theme[data-size=small] {
+  padding: 0;
 
-    .profile-popover-content {
-      color: #63656e;
-      line-height: 32px;
+  .profile-popover-content {
+    color: #63656e;
+    line-height: 32px;
 
-      .bk-option {
-        margin: 0;
-        min-width: 100px;
+    .bk-option {
+      margin: 0;
+      min-width: 100px;
 
-        .bk-option-name {
-          .gsekit-icon-logout-fill {
-            font-size: 14px;
-            margin-right: 4px;
-          }
+      .bk-option-name {
+        .gsekit-icon-logout-fill {
+          font-size: 14px;
+          margin-right: 4px;
         }
       }
     }
   }
+}
 </style>

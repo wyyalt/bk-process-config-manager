@@ -9,6 +9,7 @@ import { bus } from '@/common/bus';
 import '@/common/bkmagic';
 import '@/common/directives';
 import '@icon-cool/bk-icon-gsekit';
+import '@/bk_icon_font/style.css';
 import '@/common/svg';
 import '@/common/text-tool';
 import { injectCSRFTokenToHeaders } from '@/api';

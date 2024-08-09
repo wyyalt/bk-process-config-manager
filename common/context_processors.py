@@ -20,8 +20,8 @@ context_processor for common(setting)
 除setting外的其他context_processor内容，均采用组件的方式(string)
 """
 WEB_TITLE_MAP = {
-    "ieod": _("{app_name} | 腾讯蓝鲸智云").format(app_name=settings.APP_NAME),
-    "open": _("{app_name} | 腾讯蓝鲸智云").format(app_name=settings.APP_NAME),
+    "ieod": _("{app_name} | 蓝鲸智云").format(app_name=settings.APP_NAME),
+    "open": _("{app_name} | 蓝鲸智云").format(app_name=settings.APP_NAME),
 }
 
 

@@ -293,7 +293,6 @@ export default {
 
     .king-select {
       width: 240px;
-      margin-right: 20px;
       background: #252f43;
       border-color: #252f43;
 
@@ -344,17 +343,16 @@ export default {
     }
   
     .header-nav-btn {
-      margin-right: 20px;
       display: flex;
       flex-flow: row nowrap;
       align-items: center;
       justify-content: center;
       min-width: 32px;
       min-height: 32px;
-      margin-left: 12px;
-      padding: 0 7px;
+      margin: 0 17px;
       width: 32px;
       font-size: 18px;
+      padding: 0 7px;
   
       &.dropdown-active {
         background: rgba(255, 255, 255, .1);
